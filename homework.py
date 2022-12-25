@@ -46,16 +46,15 @@ logger.addHandler(handler)
 def check_tokens() -> bool:
     """Проверяет обязательное наличие переменных окружения."""
     if not PRACTICUM_TOKEN or not TELEGRAM_TOKEN or not TELEGRAM_CHAT_ID:
-        logger.critical(
-            f'Проверить переменные PRACTICUM_TOKEN,'
-            f'TELEGRAM_TOKEN, TELEGRAM_CHAT_ID')
+        logger.critical(f'Проверить переменные PRACTICUM_TOKEN,'
+                        f'TELEGRAM_TOKEN, TELEGRAM_CHAT_ID')
         return False
     logger.info('Все переменные окружение импортированы без ошибок')
     return True
 
 
 def get_api_answer(current_timestamp) -> dict:
-    """Запрос к АПИ Яндекспрактикума"""
+    """Запрос к АПИ Яндекспрактикума."""
     params = {'from_date': current_timestamp}
     try:
         homework = requests.get(ENDPOINT, headers=HEADERS, params=params)
@@ -104,7 +103,7 @@ def parse_status(homework):
 
 
 def send_message(bot, message):
-    """Телеграмм бот отправляет сообщение в конкретный телеграмм уккаунт"""
+    """Телеграмм бот отправляет сообщение в конкретный телеграмм уккаунт."""
     try:
         bot.send_message(chat_id=TELEGRAM_CHAT_ID, text=message)
         logger.debug('Бот отправил сообщение')
@@ -117,7 +116,7 @@ def main():
     bot = telegram.Bot(token=TELEGRAM_TOKEN)
     current_timestamp = int(time.time())
     # для отладки Fri Dec 02 2022 03:25:37 GMT+0000
-    # current_timestamp = 1669951537 
+    # current_timestamp = 1669951537
     while True:
         try:
             if check_tokens():
@@ -131,6 +130,7 @@ def main():
             time.sleep(RETRY_PERIOD)
         else:
             break
+
 
 if __name__ == '__main__':
     main()
