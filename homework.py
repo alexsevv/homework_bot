@@ -12,9 +12,9 @@ from dotenv import load_dotenv
 
 
 load_dotenv()
-PRACTICUM_TOKEN: str = os.getenv('PRACTICUM_TOKEN')
-TELEGRAM_TOKEN: str = os.getenv('TELEGRAM_TOKEN')
-TELEGRAM_CHAT_ID: int = os.getenv('TELEGRAM_CHAT_ID')
+PRACTICUM_TOKEN = os.getenv('PRACTICUM_TOKEN')
+TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
+TELEGRAM_CHAT_ID = os.getenv('TELEGRAM_CHAT_ID')
 
 RETRY_PERIOD = 600
 ENDPOINT = 'https://practicum.yandex.ru/api/user_api/homework_statuses/'
@@ -46,14 +46,13 @@ logger.addHandler(handler)
 def check_tokens() -> bool:
     """Проверяет обязательное наличие переменных окружения."""
     if not PRACTICUM_TOKEN or not TELEGRAM_TOKEN or not TELEGRAM_CHAT_ID:
-        logger.critical(f'Проверить переменные PRACTICUM_TOKEN,'
-                        f'TELEGRAM_TOKEN, TELEGRAM_CHAT_ID')
+        logger.critical('Проверить токены')
         return False
     logger.info('Все переменные окружение импортированы без ошибок')
     return True
 
 
-def get_api_answer(current_timestamp) -> dict:
+def get_api_answer(current_timestamp):
     """Запрос к АПИ Яндекспрактикума."""
     params = {'from_date': current_timestamp}
     try:
