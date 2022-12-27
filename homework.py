@@ -5,7 +5,6 @@ import sys
 import time
 from http import HTTPStatus
 from logging.handlers import RotatingFileHandler
-from urllib.error import HTTPError
 
 import requests
 import telegram
@@ -63,7 +62,8 @@ def get_api_answer(current_timestamp):
         raise GetAPIException(f'Сервер не отвечает : {error}')
     try:
         if homework.status_code != HTTPStatus.OK:
-            raise GetAPIException(f'Ответ на запрос к API: {homework.status_code}')
+            raise GetAPIException(
+                f'Ответ на запрос к API: {homework.status_code}')
         return homework.json()
     except json.decoder.JSONDecodeError as error:
         raise GetAPIException(f'Проблемы с Json форматом {error}')
@@ -118,7 +118,7 @@ def main():
     current_timestamp = int(time.time())
     while True:
         try:
-            logger.debug('Начало новой иттерации----------------------------------------------')
+            logger.debug('Начало новой иттерации--------------------------')
             if check_tokens():
                 bot = telegram.Bot(token=TELEGRAM_TOKEN)
                 response = get_api_answer(current_timestamp)
