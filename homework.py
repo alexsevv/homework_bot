@@ -61,8 +61,8 @@ def get_api_answer(current_timestamp):
     except requests.RequestException as error:
         raise GetAPIExceptionError(f'Сервер не отвечает : {error}')
     if homework.status_code != HTTPStatus.OK:
-            raise GetAPIExceptionError(
-                f'Ответ на запрос к API: {homework.status_code}')
+        raise GetAPIExceptionError(
+            f'Ответ на запрос к API: {homework.status_code}')
     try:
         return homework.json()
     except json.decoder.JSONDecodeError as error:
