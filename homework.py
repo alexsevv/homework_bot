@@ -10,7 +10,7 @@ import requests
 import telegram
 
 from dotenv import load_dotenv
-from exceptions import GetAPIException, BotNotSend, NoHomework
+from exceptions import GetAPIExceptionError, BotNotSendError, NoHomeworkError
 
 
 load_dotenv()
@@ -59,14 +59,14 @@ def get_api_answer(current_timestamp):
     try:
         homework = requests.get(ENDPOINT, headers=HEADERS, params=params)
     except requests.RequestException as error:
-        raise GetAPIException(f'Сервер не отвечает : {error}')
-    try:
-        if homework.status_code != HTTPStatus.OK:
-            raise GetAPIException(
+        raise GetAPIExceptionError(f'Сервер не отвечает : {error}')
+    if homework.status_code != HTTPStatus.OK:
+            raise GetAPIExceptionError(
                 f'Ответ на запрос к API: {homework.status_code}')
+    try:
         return homework.json()
     except json.decoder.JSONDecodeError as error:
-        raise GetAPIException(f'Проблемы с Json форматом {error}')
+        raise GetAPIExceptionError(f'Проблемы с Json форматом {error}')
 
 
 def check_response(response):
@@ -78,18 +78,15 @@ def check_response(response):
     if not isinstance(response['homeworks'], list):
         raise TypeError('Список не получили')
     if len(response['homeworks']) > 0:
-        logger.info('Список работ получили')
         return response['homeworks'][0]
     else:
-        raise NoHomework('Сейчас нет работ на проверке')
+        raise NoHomeworkError('Сейчас нет работ на проверке')
 
 
 def parse_status(homework):
     """Парсинг ответа на запрос."""
     if not isinstance(homework, dict):
         raise TypeError('Тип должен быть dict')
-    if len(homework) > 0:
-        logger.info('Получили домашнее задание')
     if 'status' not in homework or type(homework) is str:
         raise KeyError('Ключ status отсутствует в homework')
     if 'homework_name' not in homework:
@@ -104,35 +101,36 @@ def parse_status(homework):
 
 def send_message(bot, message):
     """Телеграмм бот отправляет сообщение в конкретный телеграмм уккаунт."""
+    logger.info('Начало отправки сообщения ботом')
     try:
-        logger.info('Начало отправки сообщения ботом')
         bot.send_message(chat_id=TELEGRAM_CHAT_ID, text=message)
         logger.debug('Бот отправил сообщение')
     except Exception as error:
         logger.error(f'Бот сообщение не отправил. Ошибка {error}')
-        raise BotNotSend(f'Бот сообщение не отправил. Ошибка {error}')
+        raise BotNotSendError(f'Бот сообщение не отправил. Ошибка {error}')
 
 
 def main():
     """Основная логика работы бота."""
     current_timestamp = int(time.time())
+    if check_tokens():
+        bot = telegram.Bot(token=TELEGRAM_TOKEN)
+    else:
+        message = 'Проверить токены. Бот остановлен!'
+        logger.critical(message)
+        sys.exit(message)
     while True:
         try:
             logger.debug('Начало новой иттерации--------------------------')
-            if check_tokens():
-                bot = telegram.Bot(token=TELEGRAM_TOKEN)
-                response = get_api_answer(current_timestamp)
-                check_key_homeworks = check_response(response)
-                parse_homeworks = parse_status(check_key_homeworks)
-                send_message(bot, parse_homeworks)
-                current_timestamp = int(time.time())
-                time.sleep(RETRY_PERIOD)
-            else:
-                message = 'Проверить токены. Бот остановлен!'
-                logger.critical(message)
-                sys.exit(message)
+            response = get_api_answer(current_timestamp)
+            check_key_homeworks = check_response(response)
+            logger.info('Список работ получили')
+            parse_homeworks = parse_status(check_key_homeworks)
+            send_message(bot, parse_homeworks)
+            current_timestamp = response.get('current_date', current_timestamp)
+            time.sleep(RETRY_PERIOD)
         except Exception as error:
-            logger.error(f'Ошибка: {error}')
+            logger.error(f'Ошибка: {error}', exc_info=True)
             time.sleep(RETRY_PERIOD)
 
 
